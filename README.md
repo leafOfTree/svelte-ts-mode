@@ -17,3 +17,7 @@ It combines the following major modes
 - html-mode
 - css-mode
 - typescript-ts-mode
+
+## Credits
+
+Inspired by https://github.com/mickeynp/html-ts-mode
