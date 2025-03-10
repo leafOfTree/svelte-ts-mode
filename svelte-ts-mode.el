@@ -151,7 +151,7 @@
     (_ 'svelte))))
 
 ;;;###autoload
-(define-derived-mode svelte-ts-mode html-mode "Svelte"
+(define-derived-mode svelte-ts-mode fundamental-mode "Svelte"
   "Major mode for editing Svelte templates, powered by tree-sitter."
   :group 'svelte
 
