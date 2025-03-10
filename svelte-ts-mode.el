@@ -143,15 +143,15 @@
       )))
       
 (defun svelte-ts-mode--treesit-language-at-point (point)
-"Determine the language at POINT in a Svelte file."
-(let ((node (treesit-node-at point 'svelte)))
-  (pcase (treesit-node-type (treesit-node-parent node))
-    ("script_element" 'typescript)
-    ("style_element" 'css)
-    (_ 'svelte))))
+  "Determine the language at POINT in a Svelte file."
+  (let ((node (treesit-node-at point 'svelte)))
+    (pcase (treesit-node-type (treesit-node-parent node))
+      ("script_element" 'typescript)
+      ("style_element" 'css)
+      (_ 'svelte))))
 
 ;;;###autoload
-(define-derived-mode svelte-ts-mode html-mode "Svelte"
+(define-derived-mode svelte-ts-mode prog-mode "Svelte"
   "Major mode for editing Svelte templates, powered by tree-sitter."
   :group 'svelte
 
