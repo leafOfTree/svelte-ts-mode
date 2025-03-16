@@ -165,58 +165,60 @@
     (error "Tree-sitter grammar for Typescript/TSX isn't available"))
 
   (treesit-parser-create 'svelte)
+  (treesit-parser-create 'css)
+  (treesit-parser-create 'typescript)
 
   ;; Indentation rules
   (setq-local
-    treesit-simple-indent-rules svelte-ts-mode--indent-rules
-    css-indent-offset svelte-ts-mode-indent-offset)
+   treesit-simple-indent-rules svelte-ts-mode--indent-rules
+   css-indent-offset svelte-ts-mode-indent-offset)
 
   ;; Font locking
   (setq-local
-  treesit-font-lock-settings svelte-ts-mode--font-lock-settings
-  treesit-font-lock-feature-list
-  '((;; Svelte features
-     svelte-attribute
-     svelte-bracket
-     svelte-comment
-     svelte-keyword
-     svelte-string
-     svelte-tag
-     
-     ;; CSS features
-     css-bracket
-     css-comment
-     css-constant
-     css-error
-     css-function
-     css-keyword
-     css-operator
-     css-property
-     css-query
-     css-selector
-     css-string
-     css-variable
-     
-     ;; TypeScript features
-     typescript-bracket
-     typescript-comment
-     typescript-constant
-     typescript-declaration
-     typescript-delimiter
-     typescript-escape-sequence
-     typescript-expression
-     typescript-function
-     typescript-identifier
-     typescript-keyword
-     typescript-number
-     typescript-pattern
-     typescript-property
-     typescript-string)))
+   treesit-font-lock-settings svelte-ts-mode--font-lock-settings
+   treesit-font-lock-feature-list
+   '((;; Svelte features
+      svelte-attribute
+      svelte-bracket
+      svelte-comment
+      svelte-keyword
+      svelte-string
+      svelte-tag
+      
+      ;; CSS features
+      css-bracket
+      css-comment
+      css-constant
+      css-error
+      css-function
+      css-keyword
+      css-operator
+      css-property
+      css-query
+      css-selector
+      css-string
+      css-variable
+      
+      ;; TypeScript features
+      typescript-bracket
+      typescript-comment
+      typescript-constant
+      typescript-declaration
+      typescript-delimiter
+      typescript-escape-sequence
+      typescript-expression
+      typescript-function
+      typescript-identifier
+      typescript-keyword
+      typescript-number
+      typescript-pattern
+      typescript-property
+      typescript-string)))
 
   ;; Embedded languages
   (setq-local
-    treesit-range-settings svelte-ts-mode--range-settings
-    treesit-language-at-point-function #'svelte-ts-mode--treesit-language-at-point)
+   treesit-range-settings svelte-ts-mode--range-settings
+   treesit-language-at-point-function #'svelte-ts-mode--treesit-language-at-point)
 
   (treesit-major-mode-setup))
 
