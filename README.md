@@ -48,6 +48,16 @@ It requires
   (require 'svelte-ts-mode)
   ```
 
+## Example Configuration
+
+```eamcs-lisp
+(use-package svelte-ts-mode
+  :after eglot
+  :ensure (:host github :repo "leafOfTree/svelte-ts-mode")
+  :config
+  (add-to-list 'eglot-server-programs '(svelte-ts-mode . ("svelteserver" "--stdio"))))
+```
+
 ## Credits
 
 Inspired by `mhtml-ts-mode`
