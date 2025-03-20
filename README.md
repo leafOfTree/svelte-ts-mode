@@ -6,9 +6,18 @@ It requires
 
 - Emacs `(>= emacs-major-version 29)` with tree-sitter support.
 
-- Svelte language grammer `M-x treesit-install-language-grammar`
+Upstream grammars:
 
-  You can use https://github.com/Himujjal/tree-sitter-svelte
+- [tree-sitter-svelte][3]: mandatory
+- [tree-sitter-typescript][4]: optional
+- [tree-sitter-javascript][5]: optional
+- [tree-sitter-css][6]: optional
+
+Example `language-source-alist` for `treesit-language-source-alist` can be found
+in `svlete-ts-mode-language-source-alist` constant in [svelte-ts-mode.el](./svelte-ts-mode.el)
+
+You can use command `M-x treesit-install-language-grammar` to install these grammars
+once you have configured them in your `treesit-language-source-alist`.
 
 ## Installation
 
@@ -50,7 +59,7 @@ It requires
 
 ## Example Configuration
 
-```eamcs-lisp
+```emacs-lisp
 (use-package svelte-ts-mode
   :after eglot
   :ensure (:host github :repo "leafOfTree/svelte-ts-mode")
@@ -64,4 +73,8 @@ Inspired by `mhtml-ts-mode`
 
 [1]: https://github.com/syl20bnr/spacemacs
 [2]: https://melpa.org/#/svelte-mode
+[3]: https://github.com/Himujjal/tree-sitter-svelte
+[4]: https://github.com/tree-sitter/tree-sitter-typescript
+[5]: https://github.com/tree-sitter/tree-sitter-javascript
+[6]: https://github.com/tree-sitter/tree-sitter-css
 
