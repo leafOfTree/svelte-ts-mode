@@ -10,14 +10,6 @@ It requires
 
   You can use https://github.com/Himujjal/tree-sitter-svelte
 
-## Features
-
-It combines the following major modes:
-
-- html-mode
-- css-mode
-- typescript-ts-mode
-
 ## Installation
 
 > [!CAUTION]
@@ -26,6 +18,13 @@ It combines the following major modes:
 - [MELPA][2]
 
   Not ready yet.
+
+- Elpaca
+
+  ```emacs-lisp
+  (use-package svelte-ts-mode
+    :ensure (:host github :repo "leafOfTree/svelte-ts-mode"))
+  ```
 
 - Manually
 
@@ -45,13 +44,13 @@ It combines the following major modes:
   ; ~/.spacemacs
   (defun dotspacemacs/user-config ()
         
-      (add-to-list 'load-path "/path/to/svelte-ts-mode")
-      (require 'svelte-ts-mode)
+  (add-to-list 'load-path "/path/to/svelte-ts-mode")
+  (require 'svelte-ts-mode)
   ```
 
 ## Credits
 
-Inspired by https://github.com/mickeynp/html-ts-mode
+Inspired by `mhtml-ts-mode`
 
 [1]: https://github.com/syl20bnr/spacemacs
 [2]: https://melpa.org/#/svelte-mode
