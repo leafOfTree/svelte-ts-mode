@@ -302,7 +302,11 @@ NODE and PARENT are ignored."
                           js--treesit-indent-rules)))
     (setq-local treesit-font-lock-feature-list
                 (svelte-ts-mode--merge-font-lock-features
-                 treesit-font-lock-feature-list js--treesit-font-lock-feature-list))
+                 treesit-font-lock-feature-list
+                 ;; Emacs 29 doesn't have `js--treesit-font-lock-feature-list'
+                 '((comment document definition) (keyword string)
+                   (assignment constant escape-sequence jsx number pattern string-interpolation)
+                   (bracket delimiter function operator property))))
     (treesit-parser-create 'javascript))
 
   (when (treesit-ready-p 'typescript)
@@ -346,7 +350,10 @@ NODE and PARENT are ignored."
                           css--treesit-indent-rules)))
     (setq-local treesit-font-lock-feature-list
                 (svelte-ts-mode--merge-font-lock-features
-                 treesit-font-lock-feature-list css--treesit-font-lock-feature-list))
+                 ;; Emacs 29 doesn't have `css--treesit-font-lock-feature-list'
+                 treesit-font-lock-feature-list
+                 '((selector comment query keyword) (property constant string)
+                   (error variable function operator bracket))))
     (treesit-parser-create 'css))
 
   (let ((js-ready-p (treesit-ready-p 'javascript))
