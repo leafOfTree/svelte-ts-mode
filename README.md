@@ -67,6 +67,26 @@ once you have configured them in your `treesit-language-source-alist`.
   (add-to-list 'eglot-server-programs '(svelte-ts-mode . ("svelteserver" "--stdio"))))
 ```
 
+## Tips
+
+### Set project-wide indentation offset for different languages
+
+Create `.dir-locals.el` at the project root directory, and write content like the
+following into it:
+
+```emacs-lisp
+;;; Directory Local Variables         -*- no-byte-compile: t; -*-
+;;; For more information see (info "(emacs) Directory Variables")
+
+((nil . ((typescript-ts-mode-indent-offset . 4)
+         (js-indent-level . 4)
+         (css-indent-offset . 4)
+         (svelte-ts-mode-indent-offset . 2))))
+```
+
+This ensures indentation for a specific language(e.g. typescript) between its major mode
+and `svelte-ts-mode` are the same.
+
 ## Credits
 
 Inspired by `mhtml-ts-mode`
