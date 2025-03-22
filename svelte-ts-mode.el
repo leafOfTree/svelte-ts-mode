@@ -31,6 +31,13 @@
   :group 'svlete
   :package-version '(svelte-ts-mode . "1.0.0"))
 
+(defcustom svelte-ts-mode-enable-comment-advice t
+  "Enable language-wise comment inside `svlete-ts-mode' buffer."
+  :type 'boolean
+  :safe 'booleanp
+  :group 'svelte
+  :package-version '(svelte-ts-mode . "1.0.0"))
+
 (defconst svlete-ts-mode-language-source-alist
   '((svelte . ("https://github.com/Himujjal/tree-sitter-svelte"))
     (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" nil
@@ -242,19 +249,30 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
 
 (defun svelte-ts-mode--treesit-language-at-point (pos)
   (let* ((node (treesit-node-at pos 'svelte))
-         (parent (treesit-node-parent node)))
+         (parent (treesit-node-parent node))
+         (js-ready-p (treesit-ready-p 'javascript))
+         (ts-ready-p (treesit-ready-p 'typescript))
+         (css-ready-p (treesit-ready-p 'css)))
     (cond
      ((and node parent
            (equal (treesit-node-type node) "raw_text")
            (equal (treesit-node-type parent) "script_element"))
-      (if (null (treesit-query-capture
-                 parent svelte-ts-mode--query-get-script-element-attrs))
-          'javascript
-        'typescript))
+      (if (and js-ready-p ts-ready-p)
+          (if (null (treesit-query-capture
+                     parent svelte-ts-mode--query-get-script-element-attrs))
+              'javascript
+            'typescript)
+        (if ts-ready-p
+            'typescrpt
+          (if js-ready-p
+              'javscript
+            'svelte))))
      ((and node parent
            (equal (treesit-node-type node) "raw_text")
            (equal (treesit-node-type parent) "style_element"))
-      'css)
+      (if css-ready-p
+          'css
+        'svelte))
      (t 'svelte))))
 
 ;; reference: mhtml-ts-mode--js-css-tag-bol
@@ -266,6 +284,52 @@ NODE and PARENT are ignored."
       (line-beginning-position)
     (save-excursion
       (re-search-backward "<script.*>\\|<style.*>" nil t))))
+
+(defun svelte-ts-mode--adivce/comment-normalize-vars (fun &rest args)
+  "Adivce for `comment-normalize-vars'.
+FUN: `comment-normalize-vars'.
+ARGS: rest args for `comment-normalize-vars'."
+  (if (not (equal major-mode 'svelte-ts-mode))
+      (apply fun args)
+
+    ;; unset used variables to not affects other languages in svelte-ts-mode buffer
+    (setq-local
+     comment-start nil
+     comment-end nil
+     comment-start-skip nil
+     comment-end-skip nil
+     adaptive-fill-mode nil
+     adaptive-fill-first-line-regexp "\\`[ \t]*\\'"
+     paragraph-start "\f\\|[ \t]*$"
+     paragraph-separate "[ \t\f]*$"
+     fill-paragraph-function nil
+     comment-line-break-function #'comment-indent-new-line
+     comment-multi-line nil
+     
+     comment-indent-function #'comment-indent-default
+     comment-line-break-function #'comment-indent-new-line)
+    
+    (pcase (treesit-language-at (point))
+      ((or 'typescript 'javascript)
+       (c-ts-common-comment-setup))
+      ('css
+       (setq-local comment-start "/*")
+       (setq-local comment-start-skip "/\\*+[ \t]*")
+       (setq-local comment-end "*/")
+       (setq-local comment-end-skip "[ \t]*\\*+/"))
+      ('svelte
+       (setq-local comment-start "<!-- ")
+       (setq-local comment-end " -->")
+       (setq-local comment-indent-function #'sgml-comment-indent)
+       (setq-local comment-line-break-function #'sgml-comment-indent-new-line))
+      (_ (error "Invalid language symbol!")))
+    
+    (apply fun args)))
+
+(defun svelte-ts-mode-clean-advice ()
+  (interactive)
+  (advice-remove #'comment-normalize-vars
+                 #'svelte-ts-mode--adivce/comment-normalize-vars))
 
 
 (define-derived-mode svelte-ts-mode prog-mode "Svelte"
@@ -281,8 +345,6 @@ NODE and PARENT are ignored."
 
   ;; Indent.
   (setq-local treesit-simple-indent-rules svelte-ts-mode--indent-rules)
-
-
 
 
   (when (treesit-ready-p 'javascript)
@@ -355,6 +417,12 @@ NODE and PARENT are ignored."
                  '((selector comment query keyword) (property constant string)
                    (error variable function operator bracket))))
     (treesit-parser-create 'css))
+
+
+  (when svelte-ts-mode-enable-comment-advice
+    ;; advice-add won't add it twice
+    (advice-add #'comment-normalize-vars :around
+                #'svelte-ts-mode--adivce/comment-normalize-vars))
 
   (let ((js-ready-p (treesit-ready-p 'javascript))
         (ts-ready-p (treesit-ready-p 'typescript))
