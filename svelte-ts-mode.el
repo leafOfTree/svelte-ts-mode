@@ -18,6 +18,11 @@
 ;; This major mode includes typescript-ts-mode and css-mode
 ;; to support basic treesit svelte syntax and indent
 
+
+;; Note this mode advises `comment-normalize-vars' to create special behavior
+;; for `svelte-ts-mode' only.  You can set `svelte-ts-mode-enable-comment-advice'
+;; to nil to avoid advice.
+
 ;;; Code:
 
 (defgroup svelte nil
@@ -250,27 +255,27 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
 (defun svelte-ts-mode--treesit-language-at-point (pos)
   (let* ((node (treesit-node-at pos 'svelte))
          (parent (treesit-node-parent node))
-         (js-ready-p (treesit-ready-p 'javascript))
-         (ts-ready-p (treesit-ready-p 'typescript))
-         (css-ready-p (treesit-ready-p 'css)))
+         (js-ready (treesit-ready-p 'javascript))
+         (ts-ready (treesit-ready-p 'typescript))
+         (css-ready (treesit-ready-p 'css)))
     (cond
      ((and node parent
            (equal (treesit-node-type node) "raw_text")
            (equal (treesit-node-type parent) "script_element"))
-      (if (and js-ready-p ts-ready-p)
+      (if (and js-ready ts-ready)
           (if (null (treesit-query-capture
                      parent svelte-ts-mode--query-get-script-element-attrs))
               'javascript
             'typescript)
-        (if ts-ready-p
+        (if ts-ready
             'typescrpt
-          (if js-ready-p
+          (if js-ready
               'javscript
             'svelte))))
      ((and node parent
            (equal (treesit-node-type node) "raw_text")
            (equal (treesit-node-type parent) "style_element"))
-      (if css-ready-p
+      (if css-ready
           'css
         'svelte))
      (t 'svelte))))
@@ -424,13 +429,13 @@ ARGS: rest args for `comment-normalize-vars'."
     (advice-add #'comment-normalize-vars :around
                 #'svelte-ts-mode--adivce/comment-normalize-vars))
 
-  (let ((js-ready-p (treesit-ready-p 'javascript))
-        (ts-ready-p (treesit-ready-p 'typescript))
-        (css-ready-p (treesit-ready-p 'css)))
+  (let ((js-ready (treesit-ready-p 'javascript))
+        (ts-ready (treesit-ready-p 'typescript))
+        (css-ready (treesit-ready-p 'css)))
     (setq-local treesit-range-settings
                 (nconc
                  treesit-range-settings
-                 (if (and js-ready-p ts-ready-p)
+                 (if (and js-ready ts-ready)
                      ;; NOTE in Emacs 31 :embed can be a function
                      (treesit-range-rules
                       :embed 'typescript
@@ -440,17 +445,17 @@ ARGS: rest args for `comment-normalize-vars'."
                       :embed 'javascript
                       :host 'svelte
                       '((script_element (start_tag (tag_name) :anchor ">")  (raw_text) @capture)))
-                   (if ts-ready-p
+                   (if ts-ready
                        (treesit-range-rules
                         :embed 'typescript
                         :host 'svelte
                         '((script_element (raw_text) @capture)))
-                     (when js-ready-p
+                     (when js-ready
                        (treesit-range-rules
                         :embed 'javascript
                         :host 'svelte
                         '((script_element (raw_text) @capture))))))
-                 (when css-ready-p
+                 (when css-ready
                    (treesit-range-rules
                     :embed 'css
                     :host 'svelte
