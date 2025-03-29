@@ -266,6 +266,48 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
                        (and (< i len-a) (nth i a) (nth i a))
                        (and (< i len-b) (nth i b) (nth i b)))))))
 
+;; Copied from Emacs 31's `treesit-simple-indent-modify-rules'
+(defun svlete-ts-mode--simple-indent-modify-rules (lang new-rules rules &optional how)
+  "Pick out rules for LANG in RULES, and modify it according to NEW_RULES.
+
+RULES should have the same form as `treesit-simple-indent-rules', i.e, a
+list of (LANG RULES...).  Return a new modified rules in the form
+of (LANG RULES...).
+
+If HOW is omitted or :replace, for each rule in NEW-RULES, find the old
+rule that has the same matcher, and replace it.
+
+If HOW is :prepend, just prepend NEW-RULES to the old rules; if HOW is
+:append, append NEW-RULES."
+  (cond
+   ((not (alist-get lang rules))
+    (error "No rules for language %s in RULES" lang))
+   ((not (alist-get lang new-rules))
+    (error "No rules for language %s in NEW-RULES" lang))
+   (t (let* ((copy-of-rules (copy-tree rules))
+	           (lang-rules (alist-get lang copy-of-rules))
+	           (lang-new-rules (alist-get lang new-rules)))
+	      (cond
+	       ((eq how :prepend)
+	        (setf (alist-get lang copy-of-rules)
+		            (append lang-new-rules lang-rules)))
+	       ((eq how :append)
+	        (setf (alist-get lang copy-of-rules)
+		            (append lang-rules lang-new-rules)))
+	       ((or (eq how :replace) t)
+	        (let ((tail-new-rules lang-new-rules)
+		            (tail-rules lang-rules)
+		            (new-rule nil)
+		            (rule nil))
+	          (while (setq new-rule (car tail-new-rules))
+	            (while (setq rule (car tail-rules))
+		            (when (equal (nth 0 new-rule) (nth 0 rule))
+		              (setf (car tail-rules) new-rule))
+		            (setq tail-rules (cdr tail-rules)))
+	            (setq tail-new-rules (cdr tail-new-rules))))))
+	      copy-of-rules))))
+
+
 (defconst svelte-ts-mode--query-get-script-element-attrs
   (when (treesit-ready-p 'svelte)
     (treesit-query-compile 'svelte '((start_tag (attribute) @attr)))))
@@ -378,15 +420,13 @@ ARGS: rest args for `comment-normalize-vars'."
                          "javascript" js--treesit-font-lock-settings)))
     (setq-local treesit-simple-indent-rules
                 (append treesit-simple-indent-rules
-                        (if (>= emacs-major-version 31)
-                            (treesit-simple-indent-modify-rules
-                             'javascript
-                             '((javascript ((parent-is "program")
-                                            svelte-ts-mode--script-style-tag-bol
-                                            svelte-ts-mode-indent-offset)))
-                             js--treesit-indent-rules
-                             :replace)
-                          js--treesit-indent-rules)))
+                        (svlete-ts-mode--simple-indent-modify-rules
+                         'javascript
+                         '((javascript ((parent-is "program")
+                                        svelte-ts-mode--script-style-tag-bol
+                                        svelte-ts-mode-indent-offset)))
+                         js--treesit-indent-rules
+                         :replace)))
     (setq-local treesit-font-lock-feature-list
                 (svelte-ts-mode--merge-font-lock-features
                  treesit-font-lock-feature-list
@@ -407,15 +447,13 @@ ARGS: rest args for `comment-normalize-vars'."
                          (typescript-ts-mode--font-lock-settings 'typescript))))
     (setq-local treesit-simple-indent-rules
                 (append treesit-simple-indent-rules
-                        (if (>= emacs-major-version 31)
-                            (treesit-simple-indent-modify-rules
-                             'typescript
-                             '((typescript ((parent-is "program")
-                                            svelte-ts-mode--script-style-tag-bol
-                                            svelte-ts-mode-indent-offset)))
-                             (typescript-ts-mode--indent-rules 'typescript)
-                             :replace)
-                          (typescript-ts-mode--indent-rules 'typescript))))
+                        (svlete-ts-mode--simple-indent-modify-rules
+                         'typescript
+                         '((typescript ((parent-is "program")
+                                        svelte-ts-mode--script-style-tag-bol
+                                        svelte-ts-mode-indent-offset)))
+                         (typescript-ts-mode--indent-rules 'typescript)
+                         :replace)))
     (setq-local treesit-font-lock-feature-list
                 (svelte-ts-mode--merge-font-lock-features
                  treesit-font-lock-feature-list
@@ -435,15 +473,13 @@ ARGS: rest args for `comment-normalize-vars'."
                          "css" css--treesit-settings)))
     (setq-local treesit-simple-indent-rules
                 (append treesit-simple-indent-rules
-                        (if (>= emacs-major-version 31)
-                            (treesit-simple-indent-modify-rules
-                             'css
-                             '((css ((parent-is "stylesheet")
-                                     svelte-ts-mode--script-style-tag-bol
-                                     svelte-ts-mode-indent-offset)))
-                             css--treesit-indent-rules
-	                           :prepend)
-                          css--treesit-indent-rules)))
+                        (svlete-ts-mode--simple-indent-modify-rules
+                         'css
+                         '((css ((parent-is "stylesheet")
+                                 svelte-ts-mode--script-style-tag-bol
+                                 svelte-ts-mode-indent-offset)))
+                         css--treesit-indent-rules
+	                       :prepend)))
     (setq-local treesit-font-lock-feature-list
                 (svelte-ts-mode--merge-font-lock-features
                  ;; Emacs 29 doesn't have `css--treesit-font-lock-feature-list'
