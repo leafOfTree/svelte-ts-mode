@@ -235,6 +235,24 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
       svelte-ts-mode-indent-offset)))
   "Tree-sitter indent rules.")
 
+;; NOTE it's a must to prefix features in Emacs 30. Otherwise embedded CSS code
+;; cannot be highlighted correctly. See
+;; https://github.com/leafOfTree/svelte-ts-mode/issues/7
+(defun svelte-ts-mode--prefix-font-lock-features (prefix settings)
+  "Prefix with PREFIX the font lock features in SETTINGS."
+  (cl-loop for i from 0 below (length settings)
+           collect
+           (mapcar (lambda (f) (intern (format "%s-%s" prefix f)))
+                   (nth i settings))))
+
+(defun svelte-ts-mode--prefix-font-lock-settings-features-name (prefix settings)
+  "Prefix with PREFIX the font lock features in SETTINGS."
+  (mapcar (lambda (setting)
+            (list (nth 0 setting)
+                  (nth 1 setting)
+                  (intern (format "%s-%s" prefix (nth 2 setting)))
+                  (nth 3 setting)))
+          settings))
 
 
 (defun svelte-ts-mode--merge-font-lock-features (a b)
@@ -355,7 +373,9 @@ ARGS: rest args for `comment-normalize-vars'."
   (when (treesit-ready-p 'javascript)
     (require 'js)
     (setq-local treesit-font-lock-settings
-                (append treesit-font-lock-settings js--treesit-font-lock-settings))
+                (append treesit-font-lock-settings
+                        (svelte-ts-mode--prefix-font-lock-settings-features-name
+                         "javascript" js--treesit-font-lock-settings)))
     (setq-local treesit-simple-indent-rules
                 (append treesit-simple-indent-rules
                         (if (>= emacs-major-version 31)
@@ -371,15 +391,20 @@ ARGS: rest args for `comment-normalize-vars'."
                 (svelte-ts-mode--merge-font-lock-features
                  treesit-font-lock-feature-list
                  ;; Emacs 29 doesn't have `js--treesit-font-lock-feature-list'
-                 '((comment document definition) (keyword string)
-                   (assignment constant escape-sequence jsx number pattern string-interpolation)
-                   (bracket delimiter function operator property))))
+                 (svelte-ts-mode--prefix-font-lock-features
+                  "javascript"
+                  '((comment document definition) (keyword string)
+                    (assignment constant escape-sequence jsx number pattern string-interpolation)
+                    (bracket delimiter function operator property)))))
     (treesit-parser-create 'javascript))
 
   (when (treesit-ready-p 'typescript)
     (require 'typescript-ts-mode)
     (setq-local treesit-font-lock-settings
-                (append treesit-font-lock-settings (typescript-ts-mode--font-lock-settings 'typescript)))
+                (append treesit-font-lock-settings
+                        (svelte-ts-mode--prefix-font-lock-settings-features-name
+                         "typescript"
+                         (typescript-ts-mode--font-lock-settings 'typescript))))
     (setq-local treesit-simple-indent-rules
                 (append treesit-simple-indent-rules
                         (if (>= emacs-major-version 31)
@@ -394,16 +419,20 @@ ARGS: rest args for `comment-normalize-vars'."
     (setq-local treesit-font-lock-feature-list
                 (svelte-ts-mode--merge-font-lock-features
                  treesit-font-lock-feature-list
-                 '((comment declaration)
-                   (keyword string escape-sequence)
-                   (constant expression identifier number pattern property)
-                   (operator function bracket delimiter))))
+                 (svelte-ts-mode--prefix-font-lock-features
+                  "typescript"
+                  '((comment declaration)
+                    (keyword string escape-sequence)
+                    (constant expression identifier number pattern property)
+                    (operator function bracket delimiter)))))
     (treesit-parser-create 'typescript))
   
   (when (treesit-ready-p 'css)
     (require 'css-mode)
     (setq-local treesit-font-lock-settings
-                (append treesit-font-lock-settings css--treesit-settings))
+                (append treesit-font-lock-settings
+                        (svelte-ts-mode--prefix-font-lock-settings-features-name
+                         "css" css--treesit-settings)))
     (setq-local treesit-simple-indent-rules
                 (append treesit-simple-indent-rules
                         (if (>= emacs-major-version 31)
@@ -419,8 +448,10 @@ ARGS: rest args for `comment-normalize-vars'."
                 (svelte-ts-mode--merge-font-lock-features
                  ;; Emacs 29 doesn't have `css--treesit-font-lock-feature-list'
                  treesit-font-lock-feature-list
-                 '((selector comment query keyword) (property constant string)
-                   (error variable function operator bracket))))
+                 (svelte-ts-mode--prefix-font-lock-features
+                  "css"
+                  '((selector comment query keyword) (property constant string)
+                    (error variable function operator bracket)))))
     (treesit-parser-create 'css))
 
 
