@@ -14,7 +14,7 @@ Upstream grammars:
 - [tree-sitter-css][6]: optional
 
 Example `language-source-alist` for `treesit-language-source-alist` can be found
-in `svlete-ts-mode-language-source-alist` constant in [svelte-ts-mode.el](./svelte-ts-mode.el)
+in `svelte-ts-mode-language-source-alist` constant in [svelte-ts-mode.el](./svelte-ts-mode.el)
 
 You can use command `M-x treesit-install-language-grammar` to install these grammars
 once you have configured them in your `treesit-language-source-alist`.

@@ -25,7 +25,9 @@
 
 ;;; Code:
 
-(defgroup svelte nil
+(require 'treesit)
+
+(defgroup svelte-ts nil
   "`svelte-ts-mode'."
   :group 'languages)
 
@@ -33,17 +35,17 @@
   "Number of spaces for each indentation step in `svelte-ts-mode'."
   :type 'integer
   :safe 'integerp
-  :group 'svlete
+  :group 'svelte-ts
   :package-version '(svelte-ts-mode . "1.0.0"))
 
 (defcustom svelte-ts-mode-enable-comment-advice t
   "Enable language-wise comment inside `svlete-ts-mode' buffer."
   :type 'boolean
   :safe 'booleanp
-  :group 'svelte
+  :group 'svelte-ts
   :package-version '(svelte-ts-mode . "1.0.0"))
 
-(defconst svlete-ts-mode-language-source-alist
+(defconst svelte-ts-mode-language-source-alist
   '((svelte . ("https://github.com/Himujjal/tree-sitter-svelte"))
     (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" nil
                    "typescript/src"))
@@ -99,8 +101,7 @@ In the future, we may pin a version.")
       "snippet_statement" "snippet_start_expr" "snippet_end_expr"
 
       ;; misc expression
-      "expression" "html_expr" "const_expr" "render_expr" "debug_expr"
-      ))
+      "expression" "html_expr" "const_expr" "render_expr" "debug_expr"))
    "\\'"))
 
 
@@ -195,8 +196,7 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
             ("snippet_end_expr" "snippet_statement")
 
             ;; common
-            ("else_statement" (regexp-opt '("if_statement" "each_statement")))
-            ))
+            ("else_statement" (regexp-opt '("if_statement" "each_statement")))))
          (parent-node-raw-regexp
           (when parent-node-raw-regexp
             (concat "\\`" parent-node-raw-regexp "\\'"))))
@@ -290,8 +290,8 @@ NODE and PARENT are ignored."
     (save-excursion
       (re-search-backward "<script.*>\\|<style.*>" nil t))))
 
-(defun svelte-ts-mode--adivce/comment-normalize-vars (fun &rest args)
-  "Adivce for `comment-normalize-vars'.
+(defun svelte-ts-mode--adivce--comment-normalize-vars (fun &rest args)
+  "Advice for `comment-normalize-vars'.
 FUN: `comment-normalize-vars'.
 ARGS: rest args for `comment-normalize-vars'."
   (if (not (equal major-mode 'svelte-ts-mode))
@@ -334,7 +334,7 @@ ARGS: rest args for `comment-normalize-vars'."
 (defun svelte-ts-mode-clean-advice ()
   (interactive)
   (advice-remove #'comment-normalize-vars
-                 #'svelte-ts-mode--adivce/comment-normalize-vars))
+                 #'svelte-ts-mode--adivce--comment-normalize-vars))
 
 
 (define-derived-mode svelte-ts-mode prog-mode "Svelte"
@@ -427,7 +427,7 @@ ARGS: rest args for `comment-normalize-vars'."
   (when svelte-ts-mode-enable-comment-advice
     ;; advice-add won't add it twice
     (advice-add #'comment-normalize-vars :around
-                #'svelte-ts-mode--adivce/comment-normalize-vars))
+                #'svelte-ts-mode--adivce--comment-normalize-vars))
 
   (let ((js-ready (treesit-ready-p 'javascript))
         (ts-ready (treesit-ready-p 'typescript))
