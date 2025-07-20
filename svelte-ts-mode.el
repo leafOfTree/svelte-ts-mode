@@ -149,6 +149,19 @@ In the future, we may pin a version.")
     (punctuation)
     ()))
 
+(defvar-local svelte-ts-mode--treesit-buffer-ready
+    '((svelte . nil)
+      (javascript . nil)
+      (typescript . nil)
+      (css . nil))
+  "Memoized treesit-ready-p output for required modes in a buffer local alist.")
+
+(defun svelte-ts-mode--treesit-buffer-ready (mode)
+  "Returns memoized value of treesit-ready-p."
+  (let ((cell (assoc mode svelte-ts-mode--treesit-buffer-ready)))
+    (if cell
+        (or (cdr cell) (setcdr cell (treesit-ready-p mode)))
+      (error "Unsupported treesit mode"))))
 
 (defun svelte-ts-mode--indent-inside-container-nodes-p (_node parent _bol)
   "Whether the ancestor node(also itself) of PARENT is of container node type.
@@ -315,9 +328,9 @@ If HOW is :prepend, just prepend NEW-RULES to the old rules; if HOW is
 (defun svelte-ts-mode--treesit-language-at-point (pos)
   (let* ((node (treesit-node-at pos 'svelte))
          (parent (treesit-node-parent node))
-         (js-ready (treesit-ready-p 'javascript))
-         (ts-ready (treesit-ready-p 'typescript))
-         (css-ready (treesit-ready-p 'css)))
+         (js-ready (svelte-ts-mode--treesit-buffer-ready 'javascript))
+         (ts-ready (svelte-ts-mode--treesit-buffer-ready 'typescript))
+         (css-ready (svelte-ts-mode--treesit-buffer-ready 'css)))
     (cond
      ((and node parent
            (equal (treesit-node-type node) "raw_text")
@@ -399,7 +412,7 @@ ARGS: rest args for `comment-normalize-vars'."
 
 (define-derived-mode svelte-ts-mode prog-mode "Svelte"
   "A mode for editing Svelte templates."
-  (unless (treesit-ready-p 'svelte)
+  (unless (svelte-ts-mode--treesit-buffer-ready 'svelte)
     (error "Tree-sitter for svelte isn't available"))
 
   (setq treesit-primary-parser (treesit-parser-create 'svelte))
@@ -412,7 +425,7 @@ ARGS: rest args for `comment-normalize-vars'."
   (setq-local treesit-simple-indent-rules svelte-ts-mode--indent-rules)
 
 
-  (when (treesit-ready-p 'javascript)
+  (when (svelte-ts-mode--treesit-buffer-ready 'javascript)
     (require 'js)
     (setq-local treesit-font-lock-settings
                 (append treesit-font-lock-settings
@@ -438,7 +451,7 @@ ARGS: rest args for `comment-normalize-vars'."
                     (bracket delimiter function operator property)))))
     (treesit-parser-create 'javascript))
 
-  (when (treesit-ready-p 'typescript)
+  (when (svelte-ts-mode--treesit-buffer-ready 'typescript)
     (require 'typescript-ts-mode)
     (setq-local treesit-font-lock-settings
                 (append treesit-font-lock-settings
@@ -465,7 +478,7 @@ ARGS: rest args for `comment-normalize-vars'."
                     (operator function bracket delimiter)))))
     (treesit-parser-create 'typescript))
   
-  (when (treesit-ready-p 'css)
+  (when (svelte-ts-mode--treesit-buffer-ready 'css)
     (require 'css-mode)
     (setq-local treesit-font-lock-settings
                 (append treesit-font-lock-settings
@@ -496,9 +509,9 @@ ARGS: rest args for `comment-normalize-vars'."
     (advice-add #'comment-normalize-vars :around
                 #'svelte-ts-mode--adivce--comment-normalize-vars))
 
-  (let ((js-ready (treesit-ready-p 'javascript))
-        (ts-ready (treesit-ready-p 'typescript))
-        (css-ready (treesit-ready-p 'css)))
+  (let ((js-ready (svelte-ts-mode--treesit-buffer-ready 'javascript))
+        (ts-ready (svelte-ts-mode--treesit-buffer-ready 'typescript))
+        (css-ready (svelte-ts-mode--treesit-buffer-ready 'css)))
     (setq-local treesit-range-settings
                 (nconc
                  treesit-range-settings
