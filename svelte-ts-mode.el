@@ -261,12 +261,10 @@ NODE, PARENT and BOL see `treesit-simple-indent-rules'."
 (defun svelte-ts-mode--prefix-font-lock-settings-features-name (prefix settings)
   "Prefix with PREFIX the font lock features in SETTINGS."
   (mapcar (lambda (setting)
-            (list (nth 0 setting)
-                  (nth 1 setting)
-                  (intern (format "%s-%s" prefix (nth 2 setting)))
-                  (nth 3 setting)))
+            (pcase setting
+              (`(,lang ,query ,feature . ,rest)
+               `(,lang ,query ,(intern (format "%s-%s" prefix feature)) . ,rest))))
           settings))
-
 
 (defun svelte-ts-mode--merge-font-lock-features (a b)
   "Merge `treesit-font-lock-feature-list' A with B."
@@ -421,7 +419,7 @@ ARGS: rest args for `comment-normalize-vars'."
   (setq-local treesit-font-lock-settings svelte-ts-mode-font-lock-settings)
   (setq-local treesit-font-lock-feature-list svelte-ts-mode-font-lock-features-list)
 
-  ;; Indent.
+  ;; ;; Indent.
   (setq-local treesit-simple-indent-rules svelte-ts-mode--indent-rules)
 
 
@@ -430,7 +428,7 @@ ARGS: rest args for `comment-normalize-vars'."
     (setq-local treesit-font-lock-settings
                 (append treesit-font-lock-settings
                         (svelte-ts-mode--prefix-font-lock-settings-features-name
-                         "javascript" js--treesit-font-lock-settings)))
+                         "javascript" (js--treesit-font-lock-settings))))
     (setq-local treesit-simple-indent-rules
                 (append treesit-simple-indent-rules
                         (svlete-ts-mode--simple-indent-modify-rules
@@ -438,7 +436,7 @@ ARGS: rest args for `comment-normalize-vars'."
                          '((javascript ((parent-is "program")
                                         svelte-ts-mode--script-style-tag-bol
                                         svelte-ts-mode-indent-offset)))
-                         js--treesit-indent-rules
+                         (js--treesit-indent-rules)
                          :replace)))
     (setq-local treesit-font-lock-feature-list
                 (svelte-ts-mode--merge-font-lock-features
