@@ -21,6 +21,10 @@ once you have configured them in your `treesit-language-source-alist`.
 
 ## Installation
 
+NOTE, for Emacs master user, please use the `emacs-master` branch (i.e. you should add
+option `:branch "emacs-master"` in your elpaca configuration or clone the `emacs-master`
+branch locally).
+
 > [!CAUTION]
 > Still in early development.
 
