@@ -19,8 +19,8 @@
 ;; to support basic treesit svelte syntax and indent
 
 
-;; Note this mode advises `comment-normalize-vars' to create special behavior
-;; for `svelte-ts-mode' only.  You can set `svelte-ts-mode-enable-comment-advice'
+;; Note this mode (for Emacs < 31) advises `comment-normalize-vars' to create special
+;; behavior for `svelte-ts-mode' only.  You can set `svelte-ts-mode-enable-comment-advice'
 ;; to nil to avoid advice.
 
 ;;; Code:
@@ -38,13 +38,6 @@
   :group 'svelte-ts
   :package-version '(svelte-ts-mode . "1.0.0"))
 
-(defcustom svelte-ts-mode-enable-comment-advice t
-  "Enable language-wise comment inside `svlete-ts-mode' buffer."
-  :type 'boolean
-  :safe 'booleanp
-  :group 'svelte-ts
-  :package-version '(svelte-ts-mode . "1.0.0"))
-
 (defconst svelte-ts-mode-language-source-alist
   '((svelte . ("https://github.com/Himujjal/tree-sitter-svelte"))
     (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" nil
@@ -54,6 +47,14 @@
   "Language source for `svelte-ts-mode'.
 User can easily add it to their `treesit-language-source-alist'.
 In the future, we may pin a version.")
+
+(defcustom svelte-ts-mode-enable-comment-advice t
+  "Enable language-wise comment inside `svlete-ts-mode' buffer.
+Note only Emacs < 31 needs to set this option."
+  :type 'boolean
+  :safe 'booleanp
+  :group 'svelte-ts
+  :package-version '(svelte-ts-mode . "1.0.0"))
 
 (defconst svelte-ts-mode--indent-close-types-regexp
   (concat
@@ -361,6 +362,27 @@ NODE and PARENT are ignored."
     (save-excursion
       (re-search-backward "<script.*>\\|<style.*>" nil t))))
 
+(defvar-local svelte-ts-mode--comment-current-lang nil)
+
+(defun svelte-ts-mode--comment-setup ()
+  (let ((lang (treesit-language-at (point))))
+    (unless (eq svelte-ts-mode--comment-current-lang lang)
+      (setq svelte-ts-mode--comment-current-lang lang)
+      (pcase lang
+        ('html
+         (setq-local comment-start "<!-- ")
+         (setq-local comment-start-skip nil)
+         (setq-local comment-end " -->")
+         (setq-local comment-end-skip nil))
+        ('css
+         (setq-local comment-start "/*")
+         (setq-local comment-start-skip "/\\*+[ \t]*")
+         (setq-local comment-end "*/")
+         (setq-local comment-end-skip "[ \t]*\\*+/"))
+        ((or 'typescript 'javascript)
+         (c-ts-common-comment-setup))))))
+
+
 (defun svelte-ts-mode--adivce--comment-normalize-vars (fun &rest args)
   "Advice for `comment-normalize-vars'.
 FUN: `comment-normalize-vars'.
@@ -407,13 +429,23 @@ ARGS: rest args for `comment-normalize-vars'."
   (advice-remove #'comment-normalize-vars
                  #'svelte-ts-mode--adivce--comment-normalize-vars))
 
-
 (define-derived-mode svelte-ts-mode prog-mode "Svelte"
   "A mode for editing Svelte templates."
   (unless (svelte-ts-mode--treesit-buffer-ready 'svelte)
     (error "Tree-sitter for svelte isn't available"))
 
   (setq treesit-primary-parser (treesit-parser-create 'svelte))
+  
+  ;; Comment.
+  (if (>= emacs-major-version 31)
+      (progn
+        (setq-local comment-multi-line t)
+        (setq-local comment-setup-function #'svelte-ts-mode--comment-setup))
+
+    (when svelte-ts-mode-enable-comment-advice
+      ;; advice-add won't add it twice
+      (advice-add #'comment-normalize-vars :around
+                  #'svelte-ts-mode--adivce--comment-normalize-vars)))
   
   ;; Font-lock.
   (setq-local treesit-font-lock-settings svelte-ts-mode-font-lock-settings)
@@ -428,7 +460,9 @@ ARGS: rest args for `comment-normalize-vars'."
     (setq-local treesit-font-lock-settings
                 (append treesit-font-lock-settings
                         (svelte-ts-mode--prefix-font-lock-settings-features-name
-                         "javascript" (js--treesit-font-lock-settings))))
+                         "javascript" (if (>= emacs-major-version 31)
+                                          (js--treesit-font-lock-settings)
+                                        js--treesit-font-lock-settings))))
     (setq-local treesit-simple-indent-rules
                 (append treesit-simple-indent-rules
                         (svlete-ts-mode--simple-indent-modify-rules
@@ -436,7 +470,9 @@ ARGS: rest args for `comment-normalize-vars'."
                          '((javascript ((parent-is "program")
                                         svelte-ts-mode--script-style-tag-bol
                                         svelte-ts-mode-indent-offset)))
-                         (js--treesit-indent-rules)
+                         (if (>= emacs-major-version 31)
+                             (js--treesit-indent-rules)
+                           js--treesit-indent-rules)
                          :replace)))
     (setq-local treesit-font-lock-feature-list
                 (svelte-ts-mode--merge-font-lock-features
@@ -501,11 +537,6 @@ ARGS: rest args for `comment-normalize-vars'."
                     (error variable function operator bracket)))))
     (treesit-parser-create 'css))
 
-
-  (when svelte-ts-mode-enable-comment-advice
-    ;; advice-add won't add it twice
-    (advice-add #'comment-normalize-vars :around
-                #'svelte-ts-mode--adivce--comment-normalize-vars))
 
   (let ((js-ready (svelte-ts-mode--treesit-buffer-ready 'javascript))
         (ts-ready (svelte-ts-mode--treesit-buffer-ready 'typescript))
