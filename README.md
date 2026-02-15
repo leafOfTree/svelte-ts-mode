@@ -4,11 +4,11 @@ An Emacs tree-sitter major mode for `.svelte` files.
 
 It requires
 
-- Emacs `(>= emacs-major-version 29)` with tree-sitter support.
+- Emacs `(>= emacs-major-version 30)` with tree-sitter support.
 
 Upstream grammars:
 
-- [tree-sitter-svelte][3]: mandatory
+- [tree-sitter-svelte][3]: mandatory (NOTE: Please change to tree-sitter-grammars library, if not done already.)
 - [tree-sitter-typescript][4]: optional
 - [tree-sitter-javascript][5]: optional
 - [tree-sitter-css][6]: optional
@@ -91,13 +91,32 @@ following into it:
 This ensures indentation for a specific language(e.g. typescript) between its major mode
 and `svelte-ts-mode` are the same.
 
+## Key commands
+
+Several keys are set similar to legacy sgml/mhtml keys to help with navigation and editing.  If you do not want these keys mapped automatically then customize `svelte-ts-mode-dont-bind-keys` to non-nil value.
+
+|Keymap | Command |
+|---|---|
+|C-c /       | svelte-ts-mode-close-tag          |
+|C-c C-s     | svelte-ts-mode-mark-element       |
+|C-c C-SPC   | svelte-ts-mode-mark-element       |
+|C-c C-d     | svelte-ts-mode-delete-element     |
+|C-c C-n     | svelte-ts-mode-move-next-tag      |
+|C-c C-p     | svelte-ts-mode-move-prev-tag      |
+|C-c C-f     | svelte-ts-mode-move-next-same-tag |
+|C-c C-b     | svelte-ts-mode-move-prev-same-tag |
+|C-c <left>  | svelte-ts-mode-skip-tag-backward  |
+|C-c C-a     | svelte-ts-mode-skip-tag-backward  |
+|C-c <right> | svelte-ts-mode-skip-tag-forward   |
+|C-c C-e     | svelte-ts-mode-skip-tag-forward   |
+
 ## Credits
 
 Inspired by `mhtml-ts-mode`
 
 [1]: https://github.com/syl20bnr/spacemacs
 [2]: https://melpa.org/#/svelte-mode
-[3]: https://github.com/Himujjal/tree-sitter-svelte
+[3]: https://github.com/tree-sitter-grammars/tree-sitter-svelte
 [4]: https://github.com/tree-sitter/tree-sitter-typescript
 [5]: https://github.com/tree-sitter/tree-sitter-javascript
 [6]: https://github.com/tree-sitter/tree-sitter-css
