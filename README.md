@@ -105,9 +105,9 @@ Several keys are set similar to legacy sgml/mhtml keys to help with navigation a
 |C-c C-p     | svelte-ts-mode-move-prev-tag      |
 |C-c C-f     | svelte-ts-mode-move-next-same-tag |
 |C-c C-b     | svelte-ts-mode-move-prev-same-tag |
-|C-c <left>  | svelte-ts-mode-skip-tag-backward  |
+|C-c \<left\>  | svelte-ts-mode-skip-tag-backward  |
 |C-c C-a     | svelte-ts-mode-skip-tag-backward  |
-|C-c <right> | svelte-ts-mode-skip-tag-forward   |
+|C-c \<right\> | svelte-ts-mode-skip-tag-forward   |
 |C-c C-e     | svelte-ts-mode-skip-tag-forward   |
 
 ## Credits
@@ -120,4 +120,3 @@ Inspired by `mhtml-ts-mode`
 [4]: https://github.com/tree-sitter/tree-sitter-typescript
 [5]: https://github.com/tree-sitter/tree-sitter-javascript
 [6]: https://github.com/tree-sitter/tree-sitter-css
-
