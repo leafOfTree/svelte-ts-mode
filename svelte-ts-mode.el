@@ -844,13 +844,7 @@ successive calls."
                      (treesit-range-rules
                       :embed 'typescript
                       :host 'svelte
-                      '(
-                        ;; Scripts with attributes (e.g. lang="ts")
-                        (script_element (start_tag (attribute)) (raw_text) @capture)
-                        ;; template expressions { ... }
-                        ((svelte_raw_text) @capture)
-                        )
-
+                      '((script_element (start_tag (tag_name) (attribute)) (raw_text) @capture))
                       :embed 'javascript
                       :host 'svelte
                       '(
